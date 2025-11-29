@@ -34,7 +34,7 @@
 
 ## Installation
 
-1. **Download APK**: Get the latest `PocketDM.apk` from the [Releases](https://github.com/yourusername/PocketDM/releases) page.
+1. **Download APK**: Get the latest `PocketDM.apk` from the [Releases](https://github.com/anish-vempaty/PocketDM/releases) page.
 2. **Install**:
    - Transfer the APK to your Android device.
    - Tap to install (Allow "Install from Unknown Sources" if prompted).
