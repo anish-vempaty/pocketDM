@@ -8,7 +8,7 @@
 
 ### Hybrid AI Architecture
 
-- **Local First**: Runs **Gemma 3**, **Qwen 2.5**, or **TinyLlama** directly on your device using the **Cactus SDK**. No internet required for the core experience.
+- **Local First**: Runs **Gemma 3 1b(Best)**, **Qwen 3 0.6b**, or **TinyLlama** directly on your device using the **Cactus SDK**. No internet required for the core experience.
 - **Cloud Boost**: Seamlessly switches to **Gemini Pro** (via Hybrid Mode) for complex storytelling or when you need that extra creative spark.
 - **Two-Pass Logic**: Solves the "confused AI" problem by splitting generation into two distinct passes:
   1. **The Storyteller**: Focuses purely on narrative and immersion (Streamed in real-time).
