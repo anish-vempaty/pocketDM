@@ -1,0 +1,16 @@
+[versions]
+agp = "8.13.1"
+kotlin = "2.2.0"
+android-minSdk = "24"
+android-compileSdk = "36"
+buildconfig = "5.3.5"
+
+[libraries]
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+
+[plugins]
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version = "0.29.0" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }

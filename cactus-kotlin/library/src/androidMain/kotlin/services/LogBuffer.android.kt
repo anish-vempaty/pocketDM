@@ -1,0 +1,86 @@
+package com.cactus.services
+
+import android.content.Context
+import android.content.SharedPreferences
+import com.cactus.CactusContextInitializer
+import com.cactus.models.BufferedLogRecord
+import com.cactus.models.LogRecord
+import utils.CactusLogger
+import androidx.core.content.edit
+import kotlinx.serialization.json.Json
+
+actual object LogBuffer {
+    private const val MAX_RETRIES = 3
+    private const val PREFS_NAME = "cactus_log_buffer"
+    private const val FAILED_LOG_RECORDS_KEY = "cactus_failed_log_records"
+    
+    private fun getSharedPreferences(): SharedPreferences {
+        val context = CactusContextInitializer.getApplicationContext()
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+    
+    actual suspend fun loadFailedLogRecords(): List<BufferedLogRecord> {
+        return try {
+            val prefs = getSharedPreferences()
+            val jsonString = prefs.getString(FAILED_LOG_RECORDS_KEY, null)
+
+            if (jsonString.isNullOrEmpty()) return emptyList()
+
+            Json.decodeFromString<List<BufferedLogRecord>>(jsonString)
+        } catch (e: Exception) {
+            CactusLogger.e("Error loading failed log records: ${e.message}", tag = "LogBuffer", throwable = e)
+            emptyList()
+        }
+    }
+
+    actual suspend fun clearFailedLogRecords() {
+        try {
+            val prefs = getSharedPreferences()
+            prefs.edit { remove(FAILED_LOG_RECORDS_KEY) }
+        } catch (e: Exception) {
+            CactusLogger.e("Error clearing failed log records: ${e.message}", tag = "LogBuffer", throwable = e)
+        }
+    }
+
+    actual suspend fun handleFailedLogRecord(record: LogRecord) {
+        val failedRecords = loadFailedLogRecords().toMutableList()
+        failedRecords.add(BufferedLogRecord(
+            record = record,
+            retryCount = 1,
+            firstAttempt = System.currentTimeMillis()
+        ))
+        saveFailedLogRecords(failedRecords)
+    }
+
+    actual suspend fun handleRetryFailedLogRecord(record: LogRecord) {
+        val failedRecords = loadFailedLogRecords().toMutableList()
+        
+        val existingIndex = failedRecords.indexOfFirst { buffered ->
+            buffered.record.eventType == record.eventType && 
+            buffered.record.deviceId == record.deviceId &&
+            buffered.record.model == record.model
+        }
+        
+        if (existingIndex >= 0) {
+            val bufferedRecord = failedRecords[existingIndex]
+            bufferedRecord.retryCount++
+            
+            if (bufferedRecord.retryCount > MAX_RETRIES) {
+                failedRecords.removeAt(existingIndex)
+            } else {
+                CactusLogger.d("Retry ${bufferedRecord.retryCount}/${MAX_RETRIES} for buffered log record", tag = "LogBuffer")
+            }
+            saveFailedLogRecords(failedRecords)
+        }
+    }
+
+    private suspend fun saveFailedLogRecords(records: List<BufferedLogRecord>) {
+        try {
+            val prefs = getSharedPreferences()
+            val jsonString = Json.encodeToString(records)
+            prefs.edit { putString(FAILED_LOG_RECORDS_KEY, jsonString) }
+        } catch (e: Exception) {
+            CactusLogger.e("Error saving failed log records: ${e.message}", tag = "LogBuffer", throwable = e)
+        }
+    }
+}
